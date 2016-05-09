@@ -6,12 +6,16 @@ class SudokuBoard:
     """This will be the sudoku board game object your player will manipulate."""
 
     forcheck = True
+    mrv      = True
+    degree   = True
+    lcv      = True
 
     def __init__(self, size, board):
         """the constructor for the SudokuBoard"""
         self.BoardSize = size #the size of the board
         self.BoxSize   = int(math.sqrt(size))
         self.CurrentGameBoard= board #the current state of the game board
+        self.init = False
 
         if SudokuBoard.forcheck:
             self.ForCheck = []
@@ -20,6 +24,7 @@ class SudokuBoard:
                 for col in range(0, self.BoardSize):
                     new_row.append(self.get_allowed_moves(row, col))
                 self.ForCheck.append(new_row)
+            self.init = True
 
     def set_value(self, row, col, value):
         """This function will create a new sudoku board object with the input
@@ -68,6 +73,13 @@ class SudokuBoard:
 
     def get_allowed_moves(self, row, col):
         """Get allowed moves for a cell"""
+        if SudokuBoard.forcheck and self.init:
+            moves = []
+            for i, val in enumerate(self.ForCheck[row][col]):
+                if val:
+                    moves.append(i+1)
+            return moves
+
         allowed_moves = []
         for i in range(0,self.BoardSize):
             allowed_moves.append(True)
@@ -179,6 +191,31 @@ class SudokuBoard:
                 #     continue
                 frontier.append(new_board)
         return frontier
+
+    def get_lcv(self, row, col, val):
+        lcv = 0
+        # Check cells in row
+        for col2 in range(0, self.BoardSize):
+            allowed_moves = self.get_allowed_moves(row, col2)
+            if val in allowed_moves:
+                lcv += 1
+
+        # Check cells in col
+        for row2 in range(0, self.BoardSize):
+            allowed_moves = self.get_allowed_moves(row2, col)
+            if val in allowed_moves:
+                lcv += 1
+
+        # Check cells in cell, but not in row or col
+        for row2, col2 in self.get_box_cells(row, col):
+            if row2 == row or col2 == col:
+                continue
+
+            allowed_moves = self.get_allowed_moves(row2, col2)
+            if val in allowed_moves:
+                lcv += 1
+
+        return lcv
 
     def print_board(self):
         """Prints the current game board. Leaves unassigned spots blank."""
